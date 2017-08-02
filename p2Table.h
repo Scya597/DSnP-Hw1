@@ -11,9 +11,9 @@ class Row
 public:
    void setRowLength(int);
    void fillRow(int, int);
-   void printRow(int);
-   const int operator[] (size_t i) const { }
-   int& operator[] (size_t i) { }
+   int getIndex(int);
+   const int operator[] (size_t i) const;
+   int& operator[] (size_t i);
 
 private:
    int  *_data;
@@ -27,6 +27,12 @@ public:
 
    void print();
    bool read(const string&);
+   int sum(int);
+   int max(int);
+   int min(int);
+   int count(int);
+   double avg(int);
+   void add();
 
 private:
    vector<Row>  _rows;
