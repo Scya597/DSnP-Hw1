@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <iomanip>
 
 using namespace std;
 
@@ -24,7 +25,11 @@ void
 Row::printRow(int rowLength)
 {
   for (int i = 0; i < rowLength; i++) {
-    cout << _data[i] << ",";
+    if (_data[i] == -500) {
+      cout << setw(4) << right << "";
+    } else {
+      cout << setw(4) << right << _data[i];
+    }
   }
 }
 
@@ -42,8 +47,8 @@ Table::read(const string& csvFile)
 {
   fstream file(csvFile);
 
-  // string csv = "1,2^M3,^M5,6^M,8^M";
-  string csv = "100,,-2,^M,-33,49,57^M6,79,,8^M,-99,10,^M11,21,323,^M,,14,-5^M";
+  string csv = "1,2^M3,^M5,6^M,8^M";
+  // string csv = "100,,-2,^M,-33,49,57^M6,79,,8^M,-99,10,^M11,21,323,^M,,14,-5^M";
   int csvIndex = 0;
   rowCount = 0;
   rowLength = 1;
