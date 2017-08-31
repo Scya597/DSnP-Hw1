@@ -45,7 +45,7 @@ int main()
        cin >> col;
        table.min(col);
        cout << "Type Command:";
-     } else if (command == "COUNT") {
+     } else if (command == "DIST") {
        cin >> col;
        table.count(col);
        cout << "Type Command:";

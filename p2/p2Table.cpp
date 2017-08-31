@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <iomanip>
+#include <algorithm>
 
 using namespace std;
 
@@ -58,7 +59,7 @@ Table::print()
   for (int i = 0; i < rowCount; i++) {
     for (int j = 0; j < rowLength; j++) {
       if (_rows[i][j] == -500) {
-        cout << setw(4) << right << "";
+        cout << setw(4) << right << '.';
       } else {
         cout << setw(4) << right << _rows[i][j];
       }
@@ -81,10 +82,10 @@ Table::read(const string& csvFile)
     while(!file.eof())
     {
       getline(file,buffer,'\r');
-      if(!file.eof())
       csv += buffer;
       csv += "^M";
     }
+    csv.erase(std::remove(csv.begin(), csv.end(), '\n'), csv.end());
     // cout << csv << endl;
 
     // string csv = "1,2^M3,^M5,6^M,8^M";
@@ -93,9 +94,9 @@ Table::read(const string& csvFile)
     rowCount = 0;
     rowLength = 1;
     bool checkRowLength = true;
-
+    int length = csv.length();
     // check rowCount & rowLength
-    while (csvIndex < csv.length()) {
+    while (csvIndex < length) {
       if (csv[csvIndex] == '^') {
         checkRowLength = false;
         if (csv[csvIndex+2] != '^') {
@@ -119,7 +120,7 @@ Table::read(const string& csvFile)
     int firstIndex = 0;
     int secondIndex = 0;
     string str;
-    while(csvIndex < csv.length()) {
+    while(csvIndex < length) {
       if (csv[csvIndex] != ',' && csv[csvIndex] != '^' && csv[csvIndex] != '-') {
         if (csv[csvIndex+1] != ',' && csv[csvIndex+1] != '^') {
           if (csv[csvIndex+2] != ',' && csv[csvIndex+2] != '^') {
@@ -162,6 +163,10 @@ Table::read(const string& csvFile)
       } else if (csv[csvIndex] == ',') {
         if (csv[csvIndex+1] != ',' && csv[csvIndex+1] != '^') {
           // ,1
+          if (csvIndex == 0) {
+            matrix[0][0] = -500;
+            secondIndex++;
+          }
           csvIndex++;
         } else if (csv[csvIndex+1] == ',') {
           // ,,
@@ -289,13 +294,39 @@ int
 Table::count(int col)
 {
   int count = 0;
+  int dcount = 0;
+  bool check = false;
+
+  int *array = new int[rowCount];
+
   for (int i = 0; i < rowCount; i++) {
     if (_rows[i][col] != -500) {
+      array[count] = _rows[i][col];
       count++;
     }
   }
-  cout << "The distinct count of data in column #" << col << " is " << count << endl;
-  return count;
+
+  if (count != 0) {
+    dcount = count;
+    for (int i = 0; i < count - 1; i++) {
+      for (int j = count - 1; j > i; j--) {
+        if (array[i] == array[j]) {
+          check = true;
+        };
+      }
+      if (check) {
+        dcount -= 1;
+        check = false;
+      }
+    }
+
+    delete [] array;
+  } else {
+    dcount = count;
+  }
+
+  cout << "The distinct count of data in column #" << col << " is " << dcount << endl;
+  return dcount;
 }
 
 double
@@ -310,7 +341,11 @@ Table::avg(int col)
     }
   }
   double avg = sumResult / countResult;
-  cout << fixed << setprecision(1) << "The average of data in column #" << col << " is " << avg << endl;
+  if (countResult == 0) {
+    cout << "Error: This is a NULL column!!" << endl;
+  } else {
+    cout << fixed << setprecision(1) << "The average of data in column #" << col << " is " << avg << endl;
+  }
   return avg;
 }
 
@@ -323,7 +358,7 @@ Table::add()
   int num;
   for (int i = 0; i < rowLength; i++) {
     cin >> inputNum;
-    if (inputNum != "-") {
+    if (inputNum != ".") {
       num = atoi(inputNum.c_str());
       tempRow.fillRow(i,num);
     } else {
