@@ -5,6 +5,7 @@
 #include <vector>
 #include <iomanip>
 #include <algorithm>
+#include <sstream>
 
 using namespace std;
 
@@ -58,7 +59,7 @@ Table::print()
 {
   for (int i = 0; i < rowCount; i++) {
     for (int j = 0; j < rowLength; j++) {
-      if (_rows[i][j] == -500) {
+      if (_rows[i][j] == 2147483647) {
         cout << setw(4) << right << '.';
       } else {
         cout << setw(4) << right << _rows[i][j];
@@ -86,15 +87,13 @@ Table::read(const string& csvFile)
       csv += "^M";
     }
     csv.erase(std::remove(csv.begin(), csv.end(), '\n'), csv.end());
-    // cout << csv << endl;
 
-    // string csv = "1,2^M3,^M5,6^M,8^M";
-    // string csv = "100,,-2,^M,-33,49,57^M6,79,,8^M,-99,10,^M11,21,323,^M,,14,-5^M";
     int csvIndex = 0;
     rowCount = 0;
     rowLength = 1;
     bool checkRowLength = true;
     int length = csv.length();
+
     // check rowCount & rowLength
     while (csvIndex < length) {
       if (csv[csvIndex] == '^') {
@@ -119,113 +118,37 @@ Table::read(const string& csvFile)
     csvIndex = 0;
     int firstIndex = 0;
     int secondIndex = 0;
-    string str;
-    while(csvIndex < length) {
-      if (csv[csvIndex] != ',' && csv[csvIndex] != '^' && csv[csvIndex] != '-') {
-        if (csv[csvIndex+1] != ',' && csv[csvIndex+1] != '^') {
-          if (csv[csvIndex+2] != ',' && csv[csvIndex+2] != '^') {
-            if (csv[csvIndex+3] == ',') {
-              // 100,
-              str = csv.substr (csvIndex,3);
-              matrix[firstIndex][secondIndex] = atoi(str.c_str());
-              secondIndex++;
-              csvIndex += 3;
-            } else if (csv[csvIndex+3] == '^') {
-              // 100^M
-              str = csv.substr (csvIndex,3);
-              matrix[firstIndex][secondIndex] = atoi(str.c_str());
-              csvIndex += 3;
-            }
-          } else if (csv[csvIndex+2] == ',') {
-            // 99,
-            str = csv.substr (csvIndex,2);
-            matrix[firstIndex][secondIndex] = atoi(str.c_str());
-            secondIndex++;
-            csvIndex += 2;
-          } else if (csv[csvIndex+2] == '^') {
-            // 99^M
-            str = csv.substr (csvIndex,2);
-            matrix[firstIndex][secondIndex] = atoi(str.c_str());
-            csvIndex += 2;
-          }
-        } else if (csv[csvIndex+1] == ',') {
-          // 5,
-          str = csv.substr (csvIndex,1);
-          matrix[firstIndex][secondIndex] = atoi(str.c_str());
-          secondIndex++;
-          csvIndex++;
-        } else if (csv[csvIndex+1] == '^') {
-          // 5^M
-          str = csv.substr (csvIndex,1);
-          matrix[firstIndex][secondIndex] = atoi(str.c_str());
-          csvIndex++;
-        }
-      } else if (csv[csvIndex] == ',') {
-        if (csv[csvIndex+1] != ',' && csv[csvIndex+1] != '^') {
-          // ,1
-          if (csvIndex == 0) {
-            matrix[0][0] = -500;
-            secondIndex++;
-          }
-          csvIndex++;
-        } else if (csv[csvIndex+1] == ',') {
-          // ,,
-          matrix[firstIndex][secondIndex] = -500;
-          secondIndex++;
-          csvIndex++;
-        } else if (csv[csvIndex+1] == '^') {
-          // ,^M
-          matrix[firstIndex][secondIndex] = -500;
-          secondIndex++;
-          csvIndex++;
-        }
-      } else if (csv[csvIndex] == '^') {
-        if (csv[csvIndex+2] != ',') {
-          // ^M5
-          // ^M-4
-          firstIndex++;
-          secondIndex = 0;
-          csvIndex += 2;
-        } else if (csv[csvIndex+2] == ',') {
-          // ^M,
-          firstIndex++;
-          matrix[firstIndex][0] = -500;
-          secondIndex = 1;
-          csvIndex += 2;
-        } else if (csv[csvIndex+2] == '^') {
-          // ^M^M
-          break;
-        }
-      } else if (csv[csvIndex] == '-') {
-        if (csv[csvIndex+1] != ',' && csv[csvIndex+1] != '^') {
-          if (csv[csvIndex+2] != ',' && csv[csvIndex+2] != '^') {
-            if (csv[csvIndex+3] == ',') {
-              // -99,
-              str = csv.substr (csvIndex,3);
-              matrix[firstIndex][secondIndex] = atoi(str.c_str());
-              secondIndex++;
-              csvIndex += 3;
-            } else if (csv[csvIndex+3] == '^') {
-              // -99^M
-              str = csv.substr (csvIndex,3);
-              matrix[firstIndex][secondIndex] = atoi(str.c_str());
-              secondIndex++;
-              csvIndex += 3;
-            }
-          } else if (csv[csvIndex+2] == ',') {
-            // -9,
-            str = csv.substr (csvIndex,2);
-            matrix[firstIndex][secondIndex] = atoi(str.c_str());
-            secondIndex++;
-            csvIndex += 2;
-          } else if (csv[csvIndex+2] == '^') {
-            // -9^M
-            str = csv.substr (csvIndex,2);
-            matrix[firstIndex][secondIndex] = atoi(str.c_str());
-            secondIndex++;
-            csvIndex += 2;
+
+    ifstream file2(csvFile);
+    if(!file2.is_open())
+    {
+      cout << "Maybe the file doesn't exist." << endl;
+      return false;
+    } else {
+      string buffer;
+      string csv = "";
+      while(!file2.eof())
+      {
+        getline(file2,buffer,'\r');
+        buffer.erase(std::remove(buffer.begin(), buffer.end(), '\n'), buffer.end());
+        istringstream templine(buffer);
+        string data;
+        while (getline(templine,data,','))
+        {
+          if (data.empty()) {
+            matrix[firstIndex][secondIndex] = 2147483647;
+            secondIndex += 1;
+          } else {
+            matrix[firstIndex][secondIndex] = atof(data.c_str());
+            secondIndex += 1;
           }
         }
+        if (secondIndex == rowLength - 1) {
+          matrix[firstIndex][secondIndex] = 2147483647;
+          secondIndex += 1;
+        }
+        firstIndex += 1;
+        secondIndex = 0;
       }
     }
 
@@ -250,7 +173,7 @@ Table::sum(int col)
 {
   int sum = 0;
   for (int i = 0; i < rowCount; i++) {
-    if (_rows[i][col] != -500) {
+    if (_rows[i][col] != 2147483647) {
       sum += _rows[i][col];
     }
   }
@@ -261,11 +184,11 @@ Table::sum(int col)
 int
 Table::max(int col)
 {
-  int max = -100;
-  int temp = -500;
+  int max = -2147483648;
+  int temp = -2147483648;
   for (int i = 0; i < rowCount; i++) {
     temp = _rows[i][col];
-    if (max < temp) {
+    if (max < temp && temp != 2147483647) {
       max = temp;
     }
   }
@@ -276,10 +199,10 @@ Table::max(int col)
 int
 Table::min(int col)
 {
-  int min = 101;
-  int temp = 500;
+  int min = 2147483647;
+  int temp = 2147483647;
   for (int i = 0; i < rowCount; i++) {
-    if (_rows[i][col] != -500) {
+    if (_rows[i][col] != 2147483647) {
       temp = _rows[i][col];
     }
     if (min > temp) {
@@ -300,7 +223,7 @@ Table::count(int col)
   int *array = new int[rowCount];
 
   for (int i = 0; i < rowCount; i++) {
-    if (_rows[i][col] != -500) {
+    if (_rows[i][col] != 2147483647) {
       array[count] = _rows[i][col];
       count++;
     }
@@ -335,7 +258,7 @@ Table::avg(int col)
   double sumResult = 0;
   double countResult = 0;
   for (int i = 0; i < rowCount; i++) {
-    if (_rows[i][col] != -500) {
+    if (_rows[i][col] != 2147483647) {
       sumResult += (double)_rows[i][col];
       countResult++;
     }
@@ -362,7 +285,7 @@ Table::add()
       num = atoi(inputNum.c_str());
       tempRow.fillRow(i,num);
     } else {
-      tempRow.fillRow(i, -500);
+      tempRow.fillRow(i, 2147483647);
     }
   }
   _rows.push_back(tempRow);
