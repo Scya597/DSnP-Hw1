@@ -72,22 +72,50 @@ Table::print()
 bool
 Table::read(const string& csvFile)
 {
-	ifstream file(csvFile);
-  if(!file.is_open())
+	ifstream fileM(csvFile);
+  if(!fileM.is_open())
   {
     cout << "Maybe the file doesn't exist." << endl;
     return false;
   } else {
-    string buffer;
-    string csv = "";
-    while(!file.eof())
+    string bufferM;
+    string bufferJ;
+    string csvM = "";
+    string csvJ = "";
+    int mCount = 0;
+    int jCount = 0;
+    while(!fileM.eof())
     {
-      getline(file,buffer,'\r');
-      csv += buffer;
-      csv += "^M";
+      getline(fileM,bufferM,'\r');
+      csvM += bufferM;
+      csvM += "^M";
+      mCount++;
     }
-    csv.erase(std::remove(csv.begin(), csv.end(), '\n'), csv.end());
 
+    ifstream fileJ(csvFile);
+    if(!fileJ.is_open())
+    {
+      cout << "Maybe the file doesn't exist." << endl;
+      return false;
+    } else {
+      while(!fileJ.eof())
+      {
+        getline(fileJ,bufferJ,'\n');
+        csvJ += bufferJ;
+        csvJ += "^M";
+        jCount++;
+      }
+    }
+    string csv = "";
+
+    bool readJ = false;
+    if (mCount >= jCount) {
+      csvM.erase(std::remove(csvM.begin(), csvM.end(), '\n'), csvM.end());
+      csv = csvM;
+    } else {
+      csv = csvJ;
+      readJ = true;
+    }
     int csvIndex = 0;
     rowCount = 0;
     rowLength = 1;
@@ -119,18 +147,21 @@ Table::read(const string& csvFile)
     int firstIndex = 0;
     int secondIndex = 0;
 
-    ifstream file2(csvFile);
-    if(!file2.is_open())
+    ifstream file(csvFile);
+    if(!file.is_open())
     {
       cout << "Maybe the file doesn't exist." << endl;
       return false;
     } else {
       string buffer;
-      string csv = "";
-      while(!file2.eof())
+      while(!file.eof())
       {
-        getline(file2,buffer,'\r');
-        buffer.erase(std::remove(buffer.begin(), buffer.end(), '\n'), buffer.end());
+        if (readJ) {
+          getline(file,buffer,'\n');
+        } else {
+          getline(file,buffer,'\r');
+          buffer.erase(std::remove(buffer.begin(), buffer.end(), '\n'), buffer.end());
+        }
         istringstream templine(buffer);
         string data;
         while (getline(templine,data,','))
@@ -177,7 +208,7 @@ Table::sum(int col)
       sum += _rows[i][col];
     }
   }
-  cout << "The summation of data in column #" << col << " is " << sum << endl;
+  cout << "The summation of data in column #" << col << " is " << sum << "." << endl;
   return sum;
 }
 
@@ -186,13 +217,19 @@ Table::max(int col)
 {
   int max = -2147483648;
   int temp = -2147483648;
+  bool nullcol = true;
   for (int i = 0; i < rowCount; i++) {
     temp = _rows[i][col];
     if (max < temp && temp != 2147483647) {
       max = temp;
+      nullcol = false;
     }
   }
-  cout << "The maximum of data in column #" << col << " is " << max << endl;
+  if (nullcol)  {
+    cout << "Error: This is a NULL column!!" << endl;
+  } else {
+    cout << "The maximum of data in column #" << col << " is " << max << "." << endl;
+  }
   return max;
 }
 
@@ -201,15 +238,21 @@ Table::min(int col)
 {
   int min = 2147483647;
   int temp = 2147483647;
+  bool nullcol = true;
   for (int i = 0; i < rowCount; i++) {
     if (_rows[i][col] != 2147483647) {
       temp = _rows[i][col];
-    }
-    if (min > temp) {
-      min = temp;
+      if (min > temp) {
+        min = temp;
+        nullcol = false;
+      }
     }
   }
-  cout << "The minimum of data in column #" << col << " is " << min << endl;
+  if (nullcol) {
+    cout << "Error: This is a NULL column!!" << endl;
+  } else {
+    cout << "The minimum of data in column #" << col << " is " << min << "." << endl;
+  }
   return min;
 }
 
@@ -248,7 +291,7 @@ Table::count(int col)
     dcount = count;
   }
 
-  cout << "The distinct count of data in column #" << col << " is " << dcount << endl;
+  cout << "The distinct count of data in column #" << col << " is " << dcount << "."  << endl;
   return dcount;
 }
 
@@ -267,7 +310,7 @@ Table::avg(int col)
   if (countResult == 0) {
     cout << "Error: This is a NULL column!!" << endl;
   } else {
-    cout << fixed << setprecision(1) << "The average of data in column #" << col << " is " << avg << endl;
+    cout << fixed << setprecision(1) << "The average of data in column #" << col << " is " << avg << "." << endl;
   }
   return avg;
 }
