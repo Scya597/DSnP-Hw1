@@ -203,12 +203,18 @@ int
 Table::sum(int col)
 {
   int sum = 0;
+  bool nullcol = true;
   for (int i = 0; i < rowCount; i++) {
     if (_rows[i][col] != 2147483647) {
       sum += _rows[i][col];
+      nullcol = false;
     }
   }
-  cout << "The summation of data in column #" << col << " is " << sum << "." << endl;
+  if (nullcol)  {
+    cout << "Error: This is a NULL column!!" << endl;
+  } else {
+    cout << "The summation of data in column #" << col << " is " << sum << "." << endl;
+  }
   return sum;
 }
 
@@ -291,7 +297,11 @@ Table::count(int col)
     dcount = count;
   }
 
-  cout << "The distinct count of data in column #" << col << " is " << dcount << "."  << endl;
+  if (dcount == 0) {
+    cout << "Error: This is a NULL column!!" << endl;
+  } else {
+    cout << "The distinct count of data in column #" << col << " is " << dcount << "."  << endl;
+  }
   return dcount;
 }
 
